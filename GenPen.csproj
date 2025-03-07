@@ -45,6 +45,13 @@
     <Content Remove="GHPT\**" />
   </ItemGroup>
 
+  <!-- プロンプトテンプレートファイルを埋め込みリソースとして含める -->
+  <ItemGroup>
+    <EmbeddedResource Include="prompt.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
   <!-- ビルド後のイベント：dllをghaにコピー -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)$(TargetName).gha" />

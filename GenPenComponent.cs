@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
@@ -15,6 +16,38 @@ namespace GenPen
                 "GenPenコンポーネントの説明",
                 "GenPen", "Subcategory")
         {
+            // 初回起動時の設定
+            InitializeSettings();
+        }
+
+        /// <summary>
+        /// 初回起動時の設定を行います
+        /// </summary>
+        private void InitializeSettings()
+        {
+            try
+            {
+                // APIキーが設定されているか確認
+                if (!TokenManager.IsApiKeySet)
+                {
+                    // APIキー設定ダイアログを表示
+                    DialogResult result = TokenManager.ShowSettingsDialog();
+                    
+                    if (result != DialogResult.OK)
+                    {
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                            "APIキーが設定されていません。GenPenの機能を使用するにはAPIキーが必要です。");
+                    }
+                }
+
+                // プロンプトテンプレートが存在するか確認
+                PromptTemplate.EnsurePromptTemplateExists();
+            }
+            catch (Exception ex)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
+                    $"初期化中にエラーが発生しました: {ex.Message}");
+            }
         }
 
         /// <summary>
