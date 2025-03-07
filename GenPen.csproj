@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
@@ -34,6 +35,14 @@
       <HintPath>C:\Program Files\Rhino 7\Plug-ins\Grasshopper\GH_IO.dll</HintPath>
       <Private>False</Private>
     </Reference>
+  </ItemGroup>
+
+  <!-- GHPTフォルダをビルドから除外 -->
+  <ItemGroup>
+    <Compile Remove="GHPT\**" />
+    <EmbeddedResource Remove="GHPT\**" />
+    <None Remove="GHPT\**" />
+    <Content Remove="GHPT\**" />
   </ItemGroup>
 
   <!-- ビルド後のイベント：dllをghaにコピー -->
