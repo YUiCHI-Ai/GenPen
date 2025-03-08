@@ -1,0 +1,104 @@
+{
+  "advice": "このサンプルは、円を作成し、その円をオフセットするシンプルなGrasshopperワークフローを示しています。",
+  "components": [
+    {
+      "id": 1,
+      "name": "Circle",
+      "value": null,
+      "tier": 0,
+      "metadata": {
+        "description": "中心点と半径から円を作成します"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Point",
+      "value": "0,0,0",
+      "tier": 0,
+      "metadata": {
+        "description": "円の中心点"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Number Slider",
+      "value": "5.0",
+      "tier": 0,
+      "metadata": {
+        "description": "円の半径",
+        "min": 1.0,
+        "max": 10.0
+      }
+    },
+    {
+      "id": 4,
+      "name": "Offset Curve",
+      "value": null,
+      "tier": 1,
+      "metadata": {
+        "description": "曲線をオフセットします"
+      }
+    },
+    {
+      "id": 5,
+      "name": "Number Slider",
+      "value": "1.0",
+      "tier": 0,
+      "metadata": {
+        "description": "オフセット距離",
+        "min": 0.1,
+        "max": 5.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "source": {
+        "componentId": 2,
+        "parameterName": "Point",
+        "index": null
+      },
+      "target": {
+        "componentId": 1,
+        "parameterName": "Center",
+        "index": null
+      }
+    },
+    {
+      "source": {
+        "componentId": 3,
+        "parameterName": "Number",
+        "index": null
+      },
+      "target": {
+        "componentId": 1,
+        "parameterName": "Radius",
+        "index": null
+      }
+    },
+    {
+      "source": {
+        "componentId": 1,
+        "parameterName": "Circle",
+        "index": null
+      },
+      "target": {
+        "componentId": 4,
+        "parameterName": "Curve",
+        "index": null
+      }
+    },
+    {
+      "source": {
+        "componentId": 5,
+        "parameterName": "Number",
+        "index": null
+      },
+      "target": {
+        "componentId": 4,
+        "parameterName": "Distance",
+        "index": null
+      }
+    }
+  ]
+}

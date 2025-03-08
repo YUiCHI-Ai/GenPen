@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GenPen")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7f7d09c67cd675df3fc0417c58f809eb567fa3a9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d479cc60b160a73cd71744f28291b349ba5b6a52")]
 [assembly: System.Reflection.AssemblyProductAttribute("GenPen")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GenPen")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
