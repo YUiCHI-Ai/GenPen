@@ -284,34 +284,6 @@ namespace GenPen
         /// </summary>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            // デバッグログ用のメソッド
-            void LogDebug(string message)
-            {
-                try
-                {
-                    // OpenAIService.LogDebugメソッドを反射で呼び出す
-                    var openAIServiceType = Type.GetType("GenPen.OpenAIService, GenPen");
-                    if (openAIServiceType != null)
-                    {
-                        var logDebugMethod = openAIServiceType.GetMethod("LogDebug", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                        if (logDebugMethod != null)
-                        {
-                            logDebugMethod.Invoke(null, new object[] { $"[GenPenComponent] {message}" });
-                            return;
-                        }
-                    }
-                    
-                    // 反射に失敗した場合はデバッグ出力に直接書き込む
-                    System.Diagnostics.Debug.WriteLine($"[GenPenComponent] {message}");
-                }
-                catch
-                {
-                    // ログ記録中のエラーは無視
-                }
-            }
-            
-            LogDebug("SolveInstance開始");
-            
             // 入力パラメータの取得
             string prompt = string.Empty;
             string model = "gpt-3.5-turbo";
@@ -319,14 +291,10 @@ namespace GenPen
 
             if (!DA.GetData(0, ref prompt))
             {
-                LogDebug("プロンプトが提供されていません");
                 return;
             }
             DA.GetData(1, ref model);
             DA.GetData(2, ref temperature);
-            
-            LogDebug($"入力パラメータ: モデル={model}, 温度={temperature}");
-            LogDebug($"プロンプト長: {prompt.Length}文字");
 
             // ステータスメッセージの初期化
             string statusMessage = "準備完了";
@@ -335,7 +303,6 @@ namespace GenPen
             bool isApiKeySet = false;
             try
             {
-                LogDebug("TokenManagerのIsApiKeySetプロパティを取得中...");
                 // TokenManagerクラスのIsApiKeySetプロパティを反射を使用して取得
                 var tokenManagerType = Type.GetType("GenPen.TokenManager, GenPen");
                 if (tokenManagerType != null)
@@ -344,29 +311,18 @@ namespace GenPen
                     if (isApiKeySetProperty != null)
                     {
                         isApiKeySet = (bool)isApiKeySetProperty.GetValue(null);
-                        LogDebug($"APIキー設定状態: {isApiKeySet}");
                     }
-                    else
-                    {
-                        LogDebug("IsApiKeySetプロパティが見つかりません");
-                    }
-                }
-                else
-                {
-                    LogDebug("TokenManagerクラスが見つかりません");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 反射に失敗した場合は、APIキーが設定されていないと仮定
-                LogDebug($"APIキー設定状態の取得中にエラー: {ex.Message}");
                 isApiKeySet = false;
             }
 
             if (!isApiKeySet)
             {
                 statusMessage = "エラー: APIキーが設定されていません。";
-                LogDebug(statusMessage);
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, statusMessage);
                 DA.SetData(3, statusMessage);
                 return;
@@ -377,43 +333,33 @@ namespace GenPen
                 // OpenAIServiceのインスタンスがなければ作成
                 if (_openAIService == null)
                 {
-                    LogDebug("OpenAIServiceのインスタンスを作成中...");
                     // OpenAIServiceクラスのインスタンスを作成
                     var openAIServiceType = Type.GetType("GenPen.OpenAIService, GenPen");
                     if (openAIServiceType != null)
                     {
                         _openAIService = Activator.CreateInstance(openAIServiceType) as dynamic;
                         statusMessage = "OpenAIServiceを初期化しました。";
-                        LogDebug("OpenAIServiceのインスタンス作成に成功しました");
                     }
                     else
                     {
                         statusMessage = "エラー: OpenAIServiceクラスが見つかりません。";
-                        LogDebug(statusMessage);
                         AddRuntimeMessage(GH_RuntimeMessageLevel.Error, statusMessage);
                         DA.SetData(3, statusMessage);
                         return;
                     }
                 }
-                else
-                {
-                    LogDebug("既存のOpenAIServiceインスタンスを使用します");
-                }
 
                 // リクエスト送信前のステータス更新
                 statusMessage = "APIリクエスト送信中...";
-                LogDebug(statusMessage);
                 DA.SetData(3, statusMessage);
 
                 // 非同期処理を同期的に実行（Grasshopperの制約）
                 try
                 {
                     // キャンセレーショントークンを作成（30秒でタイムアウト）
-                    LogDebug("キャンセレーショントークンを作成中 (タイムアウト: 30秒)");
                     var cancellationTokenSource = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30));
                     
                     // 同期メソッドを使用（デッドロック回避のため）
-                    LogDebug("SendRequest（同期メソッド）を呼び出し中...");
                     System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
                     stopwatch.Start();
                     
@@ -425,24 +371,20 @@ namespace GenPen
                     );
                     
                     stopwatch.Stop();
-                    LogDebug($"SendRequest（同期メソッド）完了: 所要時間={stopwatch.ElapsedMilliseconds}ms");
 
                     // 出力パラメータの設定
-                    LogDebug("レスポンスを出力パラメータに設定中...");
                     DA.SetData(0, response.GetContent());
                     DA.SetData(1, response.Model);
                     DA.SetData(2, response.Usage.TotalTokens);
                     
                     // 成功ステータスの設定
                     statusMessage = $"成功: {response.Usage.TotalTokens}トークンを使用しました。";
-                    LogDebug(statusMessage);
                     DA.SetData(3, statusMessage);
                 }
-                catch (System.Threading.Tasks.TaskCanceledException ex)
+                catch (System.Threading.Tasks.TaskCanceledException)
                 {
                     // タイムアウトエラーの処理
                     statusMessage = "エラー: APIリクエストがタイムアウトしました。";
-                    LogDebug($"{statusMessage} 例外: {ex.Message}");
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Error, statusMessage);
                     DA.SetData(3, statusMessage);
                 }
@@ -450,11 +392,6 @@ namespace GenPen
                 {
                     // 複数の例外が集約されている場合
                     statusMessage = $"エラー: {ex.InnerException?.Message ?? ex.Message}";
-                    LogDebug($"集約例外: {ex.Message}");
-                    if (ex.InnerException != null)
-                    {
-                        LogDebug($"内部例外: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
-                    }
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Error, statusMessage);
                     DA.SetData(3, statusMessage);
                 }
@@ -463,19 +400,15 @@ namespace GenPen
             {
                 // エラーメッセージを表示
                 statusMessage = $"エラー: {ex.Message}";
-                LogDebug($"例外が発生しました: {ex.GetType().Name}: {ex.Message}");
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, statusMessage);
                 DA.SetData(3, statusMessage);
                 
                 if (ex.InnerException != null)
                 {
                     string innerErrorMessage = $"内部エラー: {ex.InnerException.Message}";
-                    LogDebug($"内部例外: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Error, innerErrorMessage);
                 }
             }
-            
-            LogDebug("SolveInstance終了");
         }
     }
 }

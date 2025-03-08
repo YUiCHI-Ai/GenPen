@@ -17,9 +17,6 @@ namespace GenPen
     {
         private const string API_URL = "https://api.openai.com/v1/chat/completions";
         private readonly HttpClient _httpClient;
-        
-        // デバッグログ用のフラグ（通常使用時は無効）
-        public static bool EnableDebugLogging { get; set; } = false;
 
         /// <summary>
         /// コンストラクタ
@@ -28,24 +25,6 @@ namespace GenPen
         {
             _httpClient = new HttpClient();
             _httpClient.Timeout = TimeSpan.FromSeconds(30); // 30秒のタイムアウトを設定
-            
-            // デバッグログの初期化
-            if (EnableDebugLogging)
-            {
-                LogDebug("OpenAIService インスタンスを作成しました");
-                LogDebug($"HTTPクライアントのタイムアウト: {_httpClient.Timeout.TotalSeconds}秒");
-            }
-        }
-        
-        /// <summary>
-        /// デバッグログを記録します（通常使用時は無効）
-        /// </summary>
-        public static void LogDebug(string message)
-        {
-            if (!EnableDebugLogging) return;
-            
-            // デバッグ出力にのみ表示
-            Debug.WriteLine(message);
         }
 
         /// <summary>
