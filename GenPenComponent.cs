@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Types;
+using Grasshopper.Kernel.Special;
 using Rhino.Geometry;
 
 namespace GenPen
@@ -141,11 +142,111 @@ namespace GenPen
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
                         "APIキーが設定されていません。GenPenの機能を使用するにはAPIキーが必要です。");
                 }
+                
+                // モデル選択用のValue Listを作成
+                try
+                {
+                    CreateModelValueList(document);
+                }
+                catch (Exception ex)
+                {
+                    // Value List作成に失敗した場合でもコンポーネントは正常に動作するようにする
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                        $"モデル選択用のValue List作成に失敗しました: {ex.Message}");
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
+                        "モデル選択はコンポーネントの「モデル」入力に直接テキストを接続することでも可能です。");
+                }
             }
             catch (Exception ex)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
                     $"APIキー設定中にエラーが発生しました: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// モデル選択用のValue Listを作成します
+        /// </summary>
+        private void CreateModelValueList(GH_Document document)
+        {
+            try
+            {
+                // ドキュメントがnullでないことを確認
+                if (document == null)
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "ドキュメントがnullです。Value Listを作成できません。");
+                    return;
+                }
+                
+                // 利用可能なAIモデルのリスト
+                List<string> availableModels = new List<string>
+                {
+                    "gpt-3.5-turbo",
+                    "gpt-4",
+                    "gpt-4o",
+                    "gpt-4o-mini",
+                    "o1",
+                    "o1-pro-mode",
+                    "o1-mini",
+                    "o3-mini",
+                    "o3-mini-high",
+                    "gpt-4.5"
+                };
+                
+                // Value Listコンポーネントを作成
+                GH_ValueList valueList = new GH_ValueList();
+                valueList.CreateAttributes();
+                
+                // Value Listの位置を設定（GenPenコンポーネントの左側）
+                try
+                {
+                    valueList.Attributes.Pivot = new System.Drawing.PointF(
+                        this.Attributes.Pivot.X - 150, // コンポーネントの左側に配置
+                        this.Attributes.Pivot.Y);      // 同じ高さに配置
+                }
+                catch (Exception posEx)
+                {
+                    // 位置設定に失敗した場合はデフォルト位置を使用
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                        $"Value Listの位置設定に失敗しました: {posEx.Message}");
+                }
+                
+                // Value Listの名前と説明を設定
+                valueList.NickName = "AIモデル";
+                valueList.Description = "使用するAIモデルを選択";
+                
+                // Value Listをクリアして新しい値を追加
+                valueList.ListItems.Clear();
+                
+                // 各モデルをValue Listに追加
+                foreach (string model in availableModels)
+                {
+                    valueList.ListItems.Add(new GH_ValueListItem(model, $"\"{model}\""));
+                }
+                
+                // デフォルト値を設定
+                if (valueList.ListItems.Count > 0)
+                {
+                    valueList.ListItems[0].Selected = true;
+                }
+                
+                // Value Listをドキュメントに追加
+                document.AddObject(valueList, false);
+                
+                // ユーザーに接続を促すメッセージを表示
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
+                    "AIモデル選択用のValue Listが作成されました。Value ListをGenPenコンポーネントの「モデル」入力に接続してください。");
+            }
+            catch (Exception ex)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
+                    $"Value List作成中にエラーが発生しました: {ex.Message}");
+                
+                if (ex.InnerException != null)
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
+                        $"内部エラー: {ex.InnerException.Message}");
+                }
             }
         }
 
@@ -165,7 +266,6 @@ namespace GenPen
             pManager.AddTextParameter("プロンプト", "P", "AIに送信するプロンプト", GH_ParamAccess.item);
             pManager.AddTextParameter("モデル", "M", "使用するOpenAIモデル", GH_ParamAccess.item, "gpt-3.5-turbo");
             pManager.AddNumberParameter("温度", "T", "生成の多様性（0.0～1.0）", GH_ParamAccess.item, 0.7);
-            pManager.AddBooleanParameter("テスト実行", "Test", "テストモードで実行する", GH_ParamAccess.item, false);
         }
 
         /// <summary>
@@ -216,7 +316,6 @@ namespace GenPen
             string prompt = string.Empty;
             string model = "gpt-3.5-turbo";
             double temperature = 0.7;
-            bool isTestMode = false;
 
             if (!DA.GetData(0, ref prompt))
             {
@@ -225,9 +324,8 @@ namespace GenPen
             }
             DA.GetData(1, ref model);
             DA.GetData(2, ref temperature);
-            DA.GetData(3, ref isTestMode);
             
-            LogDebug($"入力パラメータ: モデル={model}, 温度={temperature}, テストモード={isTestMode}");
+            LogDebug($"入力パラメータ: モデル={model}, 温度={temperature}");
             LogDebug($"プロンプト長: {prompt.Length}文字");
 
             // ステータスメッセージの初期化
@@ -276,14 +374,6 @@ namespace GenPen
 
             try
             {
-                // テストモードの場合はデフォルトのプロンプトを使用
-                if (isTestMode && string.IsNullOrWhiteSpace(prompt))
-                {
-                    prompt = "こんにちは、あなたは誰ですか？";
-                    statusMessage = "テストモード: デフォルトプロンプトを使用します。";
-                    LogDebug(statusMessage);
-                }
-
                 // OpenAIServiceのインスタンスがなければ作成
                 if (_openAIService == null)
                 {
@@ -347,18 +437,6 @@ namespace GenPen
                     statusMessage = $"成功: {response.Usage.TotalTokens}トークンを使用しました。";
                     LogDebug(statusMessage);
                     DA.SetData(3, statusMessage);
-
-                    // テストモードの場合は詳細情報を表示
-                    if (isTestMode)
-                    {
-                        string testMessage = $"テスト結果: プロンプト「{prompt}」に対するレスポンスを受信しました。";
-                        LogDebug(testMessage);
-                        AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, testMessage);
-                        
-                        string modelMessage = $"モデル: {response.Model}, トークン数: {response.Usage.TotalTokens}";
-                        LogDebug(modelMessage);
-                        AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, modelMessage);
-                    }
                 }
                 catch (System.Threading.Tasks.TaskCanceledException ex)
                 {
