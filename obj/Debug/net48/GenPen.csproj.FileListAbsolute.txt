@@ -1,3 +1,4 @@
+D:\01_Scripts\03_GenPen\GenPen\bin\Debug\net48\prompt.txt
 D:\01_Scripts\03_GenPen\GenPen\bin\Debug\net48\GenPen.dll
 D:\01_Scripts\03_GenPen\GenPen\bin\Debug\net48\GenPen.pdb
 D:\01_Scripts\03_GenPen\GenPen\obj\Debug\net48\GenPen.csproj.AssemblyReference.cache
@@ -8,4 +9,3 @@ D:\01_Scripts\03_GenPen\GenPen\obj\Debug\net48\GenPen.csproj.CoreCompileInputs.c
 D:\01_Scripts\03_GenPen\GenPen\obj\Debug\net48\GenPen.sourcelink.json
 D:\01_Scripts\03_GenPen\GenPen\obj\Debug\net48\GenPen.dll
 D:\01_Scripts\03_GenPen\GenPen\obj\Debug\net48\GenPen.pdb
-D:\01_Scripts\03_GenPen\GenPen\bin\Debug\net48\prompt.txt
