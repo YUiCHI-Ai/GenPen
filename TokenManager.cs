@@ -163,17 +163,13 @@ namespace GenPen
         }
 
         /// <summary>
-        /// 初回起動時またはAPIキーが設定されていない場合に設定ダイアログを表示します
+        /// 毎回起動時に設定ダイアログを表示します
         /// </summary>
         /// <returns>ダイアログの結果</returns>
         public static DialogResult EnsureApiKeyIsSet()
         {
-            if (!IsApiKeySet)
-            {
-                return ShowSettingsDialog();
-            }
-            
-            return DialogResult.None;
+            // 毎回起動時に設定ダイアログを表示
+            return ShowSettingsDialog();
         }
     }
 }

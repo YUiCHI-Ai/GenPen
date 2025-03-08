@@ -21,23 +21,19 @@ namespace GenPen
         }
 
         /// <summary>
-        /// 初回起動時の設定を行います
+        /// 起動時の設定を行います
         /// </summary>
         private void InitializeSettings()
         {
             try
             {
-                // APIキーが設定されているか確認
-                if (!TokenManager.IsApiKeySet)
+                // APIキー設定ダイアログを表示
+                DialogResult result = TokenManager.EnsureApiKeyIsSet();
+                
+                if (result != DialogResult.OK && !TokenManager.IsApiKeySet)
                 {
-                    // APIキー設定ダイアログを表示
-                    DialogResult result = TokenManager.ShowSettingsDialog();
-                    
-                    if (result != DialogResult.OK)
-                    {
-                        AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
-                            "APIキーが設定されていません。GenPenの機能を使用するにはAPIキーが必要です。");
-                    }
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                        "APIキーが設定されていません。GenPenの機能を使用するにはAPIキーが必要です。");
                 }
 
                 // プロンプトテンプレートが存在するか確認
