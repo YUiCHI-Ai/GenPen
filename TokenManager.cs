@@ -163,13 +163,25 @@ namespace GenPen
         }
 
         /// <summary>
-        /// 毎回起動時に設定ダイアログを表示します
+        /// APIキー設定メニューアイテムを作成します
         /// </summary>
-        /// <returns>ダイアログの結果</returns>
-        public static DialogResult EnsureApiKeyIsSet()
+        /// <param name="owner">メニューアイテムの所有者</param>
+        /// <returns>メニューアイテム</returns>
+        public static ToolStripMenuItem CreateSettingsMenuItem(object owner)
         {
-            // 毎回起動時に設定ダイアログを表示
-            return ShowSettingsDialog();
+            var menuItem = new ToolStripMenuItem
+            {
+                Text = "APIキー設定...",
+                ToolTipText = "OpenAI APIキーを設定します"
+            };
+            
+            menuItem.Click += (sender, e) => ShowSettingsDialog();
+            
+            return menuItem;
         }
+
+        // EnsureApiKeyIsSetメソッドは削除
+        // GenPenComponentクラスで直接ShowSettingsDialogを呼び出すようになったため、
+        // このメソッドは不要になりました
     }
 }
